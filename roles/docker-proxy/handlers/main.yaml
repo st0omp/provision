@@ -1,0 +1,8 @@
+- name: Restart nginx
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+- name: Restart docker compose app
+  community.docker.docker_compose_v2:
+    project_src: "/opt/{{ appname }}"
+

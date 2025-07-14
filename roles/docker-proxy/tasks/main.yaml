@@ -1,0 +1,45 @@
+- name: 'Get SSL certificate'
+  ansible.builtin.command: '/usr/bin/certbot -n --nginx certonly -d {{ hostname }} --agree-tos --email {{ acme_contact }}'
+  args:
+    creates: '/etc/letsencrypt/live/{{ hostname }}'
+  ignore_errors: true
+  notify:
+    - Restart nginx
+- name: Install nginx configuration
+  ansible.builtin.template:
+    src: templates/nginx/proxy-docker
+    dest: "/etc/nginx/sites-available/{{ hostname }}"
+    mode: "0644"
+  notify:
+    - Restart nginx
+- name: Activate nginx configuration
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ hostname }}"
+    dest: "/etc/nginx/sites-enabled/{{ hostname }}"
+    state: link
+  notify:
+    - Restart nginx
+- name: Create docker directory
+  ansible.builtin.file:
+    path: "/opt/{{ appname }}"
+    state: directory
+    mode: '0755'
+- name: Clone project repository
+  ansible.builtin.git:
+    repo: "{{ git_url }}"
+    dest: "/opt/{{ appname }}"
+  when: git_url is defined
+- name: Push docker-compose file
+  ansible.builtin.copy:
+    src: "files/docker-compose/{{ appname }}.yaml"
+    dest: "/opt/{{ appname }}/docker-compose.yaml"
+    mode: "0644"
+  notify:
+    - Restart docker compose app
+- name: Push env configuration
+  ansible.builtin.template:
+    src: "templates/env/{{ appname }}"
+    dest: "/opt/{{ appname }}/.env"
+    mode: "0644"
+  notify:
+    - Restart docker compose app

@@ -1,0 +1,25 @@
+server {
+    server_name {{ hostname }};
+
+    location / {
+        proxy_pass http://127.0.0.1:{{ docker_port }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/{{ hostname }}/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/{{ hostname }}/fullchain.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf; 
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+server {
+    if ($host = {{ hostname }}) {
+        return 301 https://$host$request_uri;
+    }
+
+    listen 80;
+    server_name {{ hostname }};
+    return 404;
+}

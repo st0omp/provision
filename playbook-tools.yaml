@@ -1,0 +1,116 @@
+- name: Provisionning tools server with basic configuration
+  hosts: tools
+  become: true
+  tasks:
+    - name: Install base packages
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        update_cache: true
+        state: present
+      loop:
+        - nginx
+        - python3-certbot-nginx
+        - certbot
+        - ca-certificates
+        - curl
+        - cron
+    - name: Create apt keyring directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+    - name: Import docker gpg key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/debian/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: a+r
+    - name: Install docker apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable"
+        state: present
+        filename: docker
+    - name: Install docker
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        update_cache: true
+        state: present
+      loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-buildx-plugin
+        - docker-compose-plugin
+    - name: Add docker group
+      ansible.builtin.group:
+        name: docker
+        state: present
+    - name: Add debian user to docker group
+      ansible.builtin.user:
+        name: debian
+        groups: docker
+        append: true
+    - name: Reset ssh connection to allow user changes to affect ansible user
+      ansible.builtin.meta:
+        reset_connection
+    - name: Register certbot
+      ansible.builtin.shell: |
+        certbot -n register --agree-tos --email contact@ottoroot.com
+        touch /etc/letsencrypt/.registered
+      args:
+        creates: /etc/letsencrypt/.registered
+    - name: Setup cronjob for renewal
+      ansible.builtin.cron:
+        name: certbot-renewal
+        job: "/bin/bash -lc '/usr/local/bin/certbot -q renew'"
+        minute: "0"
+        hour: "14"
+- name: Install nocodb
+  hosts: tools
+  become: true
+  vars:
+    appname: nocodb
+    hostname: nocodb.ottoroot.com
+    docker_port: 8080
+    acme_contact: contact@ottoroot.com
+  roles:
+    - docker-proxy
+- name: Install etherpad
+  hosts: tools
+  become: true
+  vars:
+    appname: etherpad
+    hostname: pad.ottoroot.com
+    docker_port: 9001
+    acme_contact: contact@ottoroot.com
+  roles:
+    - docker-proxy
+- name: Install affine
+  hosts: tools
+  become: true
+  vars:
+    appname: affine
+    hostname: doc.ottoroot.com
+    docker_port: 3010
+    acme_contact: contact@ottoroot.com
+  roles:
+    - docker-proxy
+- name: Install actual
+  hosts: tools
+  become: true
+  vars:
+    appname: actual
+    hostname: actual.ottoroot.com
+    docker_port: 5006
+    acme_contact: contact@ottoroot.com
+  roles:
+    - docker-proxy
+- name: Install freshrss
+  hosts: tools
+  become: true
+  vars:
+    appname: freshrss
+    hostname: freshrss.ottoroot.com
+    docker_port: 8085
+    acme_contact: contact@ottoroot.com
+  roles:
+    - docker-proxy

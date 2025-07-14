@@ -1,0 +1,47 @@
+- name: Provisionning mac
+  hosts: macs
+  tasks:
+    - name: Updating homebrew apps
+      community.general.homebrew:
+        name: "{{ item }}"
+        state: latest
+        update_homebrew: true
+        upgrade_all: true
+      loop:
+        - "bat"
+        - "docker"
+        - "git"
+        - "go"
+        - "inetutils"
+        - "lima"
+        - "lima-additional-guestagents"
+        - "lua"
+        - "node"
+        - "nmap"
+        - "openvpn"
+        - "php"
+        - "pipx"
+        - "rsync"
+        - "shellcheck"
+        - "wget"
+    - name: Updating homebrew cask apps
+      community.general.homebrew:
+        name: "{{ item }}"
+        state: latest
+        update_homebrew: true
+        upgrade_all: true
+      loop: 
+        - "boosteroid"
+        - "calibre"
+        - "drawio"
+        - "librewolf"
+        - "monitorcontrol"
+        - "netnewswire"
+        - "protonvpn"
+        - "qbittorrent"
+        - "rar"
+        - "steam"
+        - "tigervnc-viewer"
+        - "ungoogled-chromium"
+        - "vlc"
+        - "vscodium"
