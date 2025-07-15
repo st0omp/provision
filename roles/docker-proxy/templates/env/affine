@@ -1,5 +1,5 @@
 # select a revision to deploy, available values: stable, beta, canary
-AFFINE_REVISION=stable
+AFFINE_REVISION=0.23.0
 
 # set the port for the server container it will expose the server on
 PORT=127.0.0.1:3010
