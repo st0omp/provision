@@ -114,3 +114,13 @@
     acme_contact: contact@ottoroot.com
   roles:
     - docker-proxy
+- name: Install linkstack
+  hosts: tools
+  become: true
+  vars:
+    appname: linkstack
+    hostname: links.ottoroot.com
+    docker_port: 8087
+    acme_contact: contact@ottoroot.com
+  roles:
+    - docker-proxy

@@ -1,0 +1,19 @@
+version: '3'
+services:
+  linkstack:
+    image: linkstackorg/linkstack:latest
+    environment:
+      - TZ=America/Toronto
+      - SERVER_ADMIN=contact@ottoroot.com
+      - HTTP_SERVER_NAME=links.ottoroot.com
+      - HTTPS_SERVER_NAME=links.ottoroot.com
+      - LOG_LEVEL=info
+      - PHP_MEMORY_LIMIT=512M
+      - UPLOAD_MAX_FILESIZE=16M
+    ports:
+      - "127.0.0.1:8087:80"
+    volumes:
+      - linkstack:/htdocs
+    restart: unless-stopped
+volumes:
+  linkstack:
